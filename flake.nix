@@ -112,7 +112,7 @@
             environment.etc."nbs/nbs.toml".source = configFile;
 
             networking.firewall.allowedTCPPorts = optional cfg.openPorts cfg.listen.port;
-            
+
             systemd.services.nbs = {
               description = "NBD block server";
 

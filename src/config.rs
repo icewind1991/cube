@@ -103,16 +103,21 @@ impl ExportConfig {
             err: e,
             path: self.path.clone(),
         })?;
-        let file = OpenOptions::new()
-            .read(true)
-            .write(!self.readonly)
-            .open(&self.path)
-            .map_err(|e| HandshakeError::Open {
-                err: e,
-                path: self.path.clone(),
-            })?;
+
+        let readonly = self.readonly || meta.permissions().readonly();
+        let mut opt = OpenOptions::new();
+        opt.read(true);
+        if !readonly {
+            opt.write(true);
+        }
+
+        let file = opt.open(&self.path).map_err(|e| HandshakeError::Open {
+            err: e,
+            path: self.path.clone(),
+        })?;
+
         Ok(Export {
-            readonly: self.readonly || meta.permissions().readonly(),
+            readonly,
             size: meta.len(),
             data: file,
             resizeable: false,
