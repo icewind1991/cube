@@ -21,7 +21,7 @@ struct Args {
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-#[tracing::instrument(skip(exports))]
+#[tracing::instrument(skip_all, fields(remote = ?stream.peer_addr().ok()))]
 fn handle_client(mut stream: TcpStream, exports: Exports) -> Result<(), NbdError> {
     let file = handshake(&mut stream, move |name| {
         let export_cfg = exports
