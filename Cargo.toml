@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-nbd = { version = "0.2.3", git = "https://github.com/icewind1991/rust-nbd" }
+nbd = "0.3.0"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 thiserror = "1.0.38"

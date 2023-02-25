@@ -198,8 +198,9 @@ dependencies = [
 
 [[package]]
 name = "nbd"
-version = "0.2.3"
-source = "git+https://github.com/icewind1991/rust-nbd#39a84717efbf33489fb6c8163047a8357765f330"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c78ff6548a62635efeb5432bab5a5e5b5589f9d794e9d6d305247914bfc78083"
 dependencies = [
  "byteorder",
 ]
