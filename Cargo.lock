@@ -70,6 +70,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "cube"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "miette",
+ "nbd",
+ "serde",
+ "signal-hook",
+ "thiserror",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "errno"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -203,21 +218,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c78ff6548a62635efeb5432bab5a5e5b5589f9d794e9d6d305247914bfc78083"
 dependencies = [
  "byteorder",
-]
-
-[[package]]
-name = "nbs"
-version = "0.1.0"
-dependencies = [
- "clap",
- "miette",
- "nbd",
- "serde",
- "signal-hook",
- "thiserror",
- "toml",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

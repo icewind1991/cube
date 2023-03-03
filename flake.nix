@@ -4,9 +4,9 @@
   };
 
   outputs = { self, nixpkgs, flake-utils }: let
-      buildNbs = pkgs: pkgs.rustPlatform.buildRustPackage rec {
+      buildCube = pkgs: pkgs.rustPlatform.buildRustPackage rec {
         version = "0.1.0";
-        pname = "nbs";
+        pname = "cube";
 
         src = ./.;
 
@@ -14,7 +14,7 @@
 
         meta = with pkgs.lib; {
           description = "A basic NBD block server with a single gimmick";
-          homepage = "https://github.com/icewind1991/nbs";
+          homepage = "https://github.com/icewind1991/cube";
           license = licenses.mit;
           platforms = platforms.linux;
         };
@@ -25,9 +25,9 @@
       in
         rec {
           # `nix build`
-          packages.nbs = buildNbs pkgs;
-          defaultPackage = packages.nbs;
-          defaultApp = packages.nbs;
+          packages.cube = buildCube pkgs;
+          defaultPackage = packages.cube;
+          defaultApp = packages.cube;
 
           # `nix develop`
           devShell = pkgs.mkShell {
@@ -42,10 +42,10 @@
         ...
       }:
         with lib; let
-          nbs = buildNbs pkgs;
-          cfg = config.services.nbs;
+          cube = buildCube pkgs;
+          cfg = config.services.cube;
           format = pkgs.formats.toml {};
-          configFile = format.generate "nbs.toml" ({
+          configFile = format.generate "cube.toml" ({
             inherit (cfg) listen;
             exports = mapAttrs (_: export: {
               inherit (export) path;
@@ -54,8 +54,8 @@
           });
           pkg = self.defaultPackage.${pkgs.system};
         in {
-          options.services.nbs = {
-            enable = mkEnableOption "nbs";
+          options.services.cube = {
+            enable = mkEnableOption "cube";
 
             log = mkOption {
               type = types.str;
@@ -108,12 +108,12 @@
           };
 
           config = mkIf cfg.enable {
-            # symlink instead of passing `configFile` directly to nbs to allread changing the config without changing the path
-            environment.etc."nbs/nbs.toml".source = configFile;
+            # symlink instead of passing `configFile` directly to cube to allread changing the config without changing the path
+            environment.etc."cube/cube.toml".source = configFile;
 
             networking.firewall.allowedTCPPorts = optional cfg.openPorts cfg.listen.port;
 
-            systemd.services.nbs = {
+            systemd.services.cube = {
               description = "NBD block server";
 
               environment = {
@@ -121,7 +121,7 @@
               };
 
               serviceConfig = {
-                ExecStart = "${nbs}/bin/nbs -c /etc/nbs/nbs.toml";
+                ExecStart = "${cube}/bin/cube -c /etc/cube/cube.toml";
                 ExecReload = "${pkgs.util-linux}/bin/kill -HUP $MAINPID";
                 Restart = "on-failure";
                 RestartSec = 10;

@@ -1,6 +1,4 @@
-# NBS
-
-NBD Block Server
+# Cube
 
 ## What
 
@@ -29,11 +27,11 @@ block = "/tmp/block.bin"
 Run the server with
 
 ```bash
-nbs -c config.toml
+cube -c config.toml
 ```
 
 When the configuration is changed, it can be reloaded by sending `SIGHUP` to the server.
 
 ```bash
-pkill -sighup nbs
+pkill -sighup cube
 ```
