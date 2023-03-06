@@ -10,7 +10,7 @@
 
         src = ./.;
 
-        cargoSha256 = "sha256-8GrzKpSZhwVytom1LH+MXqKqwPR47SM402vehAxdSMg=";
+        cargoSha256 = "sha256-tHcIwMQrGIRC6W0/B476QT5nOUY/5KkzEeJKbg3sFUA=";
 
         meta = with pkgs.lib; {
           description = "A basic NBD block server with a single gimmick";
