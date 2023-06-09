@@ -53,6 +53,8 @@ pub enum HandshakeError {
     UnknownExport(String),
     #[error("Failed to open {path}")]
     Open { path: PathBuf, err: IoError },
+    #[error("Failed to determine size of source {0:?}")]
+    UnknownSize(PathBuf),
 }
 
 impl From<HandshakeError> for IoError {
@@ -62,6 +64,10 @@ impl From<HandshakeError> for IoError {
             HandshakeError::UnknownExport(export) => {
                 IoError::new(ErrorKind::InvalidData, format!("Unknown export: {export}"))
             }
+            HandshakeError::UnknownSize(path) => IoError::new(
+                ErrorKind::InvalidData,
+                format!("Failed to get size of: {path:?}"),
+            ),
         }
     }
 }

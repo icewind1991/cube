@@ -7,6 +7,7 @@ use std::fs::{read_to_string, File, OpenOptions};
 use std::net::ToSocketAddrs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+use tracing::{debug, info};
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
@@ -103,6 +104,19 @@ impl ExportConfig {
             err: e,
             path: self.path.clone(),
         })?;
+        let size = match meta.len() {
+            0 => {
+                let path = self.path.canonicalize().map_err(|e| HandshakeError::Open {
+                    err: e,
+                    path: self.path.clone(),
+                })?;
+                if path != self.path {
+                    debug!(path = ?self.path, canonicalized = ?path, "path is configured in non canonicalized form");
+                }
+                get_block_size(&path).ok_or_else(|| HandshakeError::UnknownSize(path))?
+            }
+            size => size,
+        };
 
         let readonly = self.readonly || meta.permissions().readonly();
         let mut opt = OpenOptions::new();
@@ -116,9 +130,11 @@ impl ExportConfig {
             path: self.path.clone(),
         })?;
 
+        info!(readonly, size, "go export meta");
+
         Ok(Export {
             readonly,
-            size: meta.len(),
+            size,
             data: file,
             resizeable: false,
             rotational: false,
@@ -126,6 +142,18 @@ impl ExportConfig {
             send_flush: false,
         })
     }
+}
+
+#[tracing::instrument]
+fn get_block_size(path: &Path) -> Option<u64> {
+    let device = path.strip_prefix("/dev").ok()?;
+    let mut sys_path = PathBuf::from("/sys/class/block");
+    sys_path.push(device);
+    sys_path.push("size");
+    debug!(sysfs_path = ?sys_path, "getting block size");
+    let size_str = read_to_string(sys_path).ok()?;
+    debug!(block_count = size_str, "got size");
+    size_str.trim().parse().ok().map(|blocks: u64| blocks * 512)
 }
 
 #[derive(Debug, Clone, Deserialize)]

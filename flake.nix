@@ -1,41 +1,33 @@
 {
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "nixpkgs/nixos-22.11";
+    nixpkgs.url = "nixpkgs/nixos-23.05";
   };
 
-  outputs = { self, nixpkgs, flake-utils }: let
-      buildCube = pkgs: pkgs.rustPlatform.buildRustPackage rec {
-        version = "0.1.0";
-        pname = "cube";
-
-        src = ./.;
-
-        cargoSha256 = "sha256-tHcIwMQrGIRC6W0/B476QT5nOUY/5KkzEeJKbg3sFUA=";
-
-        meta = with pkgs.lib; {
-          description = "A basic NBD block server with a single gimmick";
-          homepage = "https://github.com/icewind1991/cube";
-          license = licenses.mit;
-          platforms = platforms.linux;
-        };
-      };
-    in flake-utils.lib.eachDefaultSystem (
+  outputs = {
+    self,
+    nixpkgs,
+    flake-utils,
+  }:
+    flake-utils.lib.eachDefaultSystem (
       system: let
-        pkgs = nixpkgs.legacyPackages."${system}";
-      in
-        rec {
-          # `nix build`
-          packages.cube = buildCube pkgs;
-          defaultPackage = packages.cube;
-          defaultApp = packages.cube;
+        pkgs = (import nixpkgs) {
+          inherit system;
+        };
+      in rec {
+        # `nix build`
+        packages = rec {
+          cube = pkgs.callPackage (import ./package.nix) {};
+          default = cube;
+        };
 
-          # `nix develop`
-          devShell = pkgs.mkShell {
-            nativeBuildInputs = with pkgs; [ rustc cargo bacon cargo-edit cargo-outdated ];
-          };
-        }
-    ) // {
+        # `nix develop`
+        devShells.default = pkgs.mkShell {
+          nativeBuildInputs = with pkgs; [rustc cargo bacon cargo-edit cargo-outdated];
+        };
+      }
+    )
+    // {
       nixosModule = {
         config,
         lib,
@@ -43,16 +35,18 @@
         ...
       }:
         with lib; let
-          cube = buildCube pkgs;
+          cube = pkgs.callPackage (import ./package.nix) {};
           cfg = config.services.cube;
           format = pkgs.formats.toml {};
-          configFile = format.generate "cube.toml" ({
+          configFile = format.generate "cube.toml" {
             inherit (cfg) listen;
-            exports = mapAttrs (_: export: {
-              inherit (export) path;
-              read_only = export.readOnly;
-            }) cfg.exports;
-          });
+            exports =
+              mapAttrs (_: export: {
+                inherit (export) path;
+                read_only = export.readOnly;
+              })
+              cfg.exports;
+          };
           pkg = self.defaultPackage.${pkgs.system};
         in {
           options.services.cube = {
