@@ -8,6 +8,7 @@ use nbd::server::{handshake, transmission};
 use signal_hook::consts::SIGHUP;
 use signal_hook::iterator::exfiltrator::SignalOnly;
 use signal_hook::iterator::SignalsInfo;
+use std::fs::File;
 use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
 use std::thread::spawn;
@@ -22,18 +23,31 @@ struct Args {
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[tracing::instrument(skip_all, fields(remote = ?stream.peer_addr().ok()))]
-fn handle_client(mut stream: TcpStream, exports: Exports) -> Result<(), NbdError> {
-    let file = handshake(&mut stream, move |name| {
+fn connect_client(stream: &mut TcpStream, exports: Exports) -> Result<File, NbdError> {
+    handshake(stream, move |name| {
         let export_cfg = exports
             .get(name)
             .ok_or_else(|| HandshakeError::UnknownExport(name.into()))?;
         info!(name = name, export = ?export_cfg, "opening export");
         Ok(export_cfg.export()?)
-    })?;
+    })
+    .map_err(NbdError::from)
+}
+
+#[tracing::instrument(skip_all, fields(remote = ?stream.peer_addr().ok()))]
+fn handle_client(mut stream: TcpStream, exports: Exports) {
+    let file = match connect_client(&mut stream, exports) {
+        Ok(file) => file,
+        Err(e) => {
+            error!(error = ?e, "error while opening export");
+            return;
+        }
+    };
     info!("connected");
-    transmission(&mut stream, file)?;
+    if let Err(e) = transmission(&mut stream, file).map_err(NbdError::from) {
+        error!("{e}");
+    }
     info!("disconnected");
-    Ok(())
 }
 
 fn main() -> Result<()> {
@@ -64,11 +78,7 @@ fn main() -> Result<()> {
         match stream {
             Ok(stream) => {
                 let exports = config.exports.clone();
-                spawn(move || {
-                    if let Err(e) = handle_client(stream, exports) {
-                        error!("{e}");
-                    }
-                });
+                spawn(move || handle_client(stream, exports));
             }
             Err(e) => {
                 let e = Error::Connection(e);

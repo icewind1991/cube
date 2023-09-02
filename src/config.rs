@@ -130,7 +130,7 @@ impl ExportConfig {
             path: self.path.clone(),
         })?;
 
-        info!(readonly, size, "go export meta");
+        info!(readonly, size, "opened export");
 
         Ok(Export {
             readonly,

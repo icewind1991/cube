@@ -41,7 +41,7 @@ impl From<NbdError> for IoError {
 impl From<IoError> for NbdError {
     fn from(value: IoError) -> Self {
         match value.kind() {
-            ErrorKind::UnexpectedEof => NbdError::Disconnected,
+            ErrorKind::UnexpectedEof | ErrorKind::ConnectionReset => NbdError::Disconnected,
             _ => NbdError::Io(value),
         }
     }
