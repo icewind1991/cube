@@ -2,7 +2,7 @@
   rustPlatform,
   lib,
 }: let
-  src = lib.sources.sourceByRegex (lib.cleanSource ./.) ["Cargo.*" "(src)(/.*)?"];
+  src = lib.sources.sourceByRegex ./. ["Cargo.*" "(src)(/.*)?"];
 in
   rustPlatform.buildRustPackage rec {
     version = "0.1.0";
