@@ -1,3 +1,5 @@
+# Moved to https://codeberg.org/icewind/cube
+
 # Cube
 
 ## What
